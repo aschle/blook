@@ -1,7 +1,8 @@
 var application_root = __dirname,
 	express = require("express"),
 	path = require("path"),
-	config = require("./configuration.js");
+	config = require("./configuration.js"),
+	mongoose = require('mongoose');
 
 // Create the server.
 
@@ -27,17 +28,49 @@ app.configure('production', function() {
 	app.use(express.errorHandler());
 });
 
+// Database stuff
+
+mongoose.connect('mongodb://localhost/blook');
+
+var Chapter = new mongoose.Schema({
+	title: { type: String, required: true},
+	date: { type: Date, required: true, default: Date.now},
+	text: { type: String, required: true}
+});
+var ChapterModel = mongoose.model('Chapter', Chapter);
+
 // REST API
 
-app.get('/section/:id', function(req, res, next) {
-	var file = req.params.id;
-	res.send(file);
+app.get('/api/chapters', function(req, res, next) {
+	console.log("Ok");
+	return EntryModel.find(function (err, entries) {
+		console.log("Hier nie")
+		if(!err)
+			return res.send(entries);
+		else
+			console.log(err);
+			next(err);
+	});
 });
 
-app.get('*', function(req, res, next) {
-	
+app.post('/api/chapters', function(req, res, next) {
+	console.log("Create a new chapter!")
+	console.log(req.body);
+	chapter = new ChapterModel({
+		title: req.body.title,
+		text: req.body.text
+	});
+
+	chapter.save(function(err) {
+		if(!err)
+			res.send(chapter);
+		else
+			next(err);
+	});
 });
 
 // Launch the server.
+
+console.log("TEEST");
 
 app.listen(4242); 
