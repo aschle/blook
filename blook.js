@@ -1,8 +1,9 @@
 var application_root = __dirname,
-	express = require("express"),
-	path = require("path"),
-	config = require("./configuration.js"),
-	mongoose = require('mongoose');
+	express = require('express'),
+	path = require('path'),
+	config = require('./configuration.js'),
+	mongoose = require('mongoose'),
+	marked = require('marked');
 
 // Create the server.
 
@@ -15,16 +16,14 @@ app.configure(function() {
 	app.use(express.cookieParser(config.cookieSecret));
 	app.use(express.session());
 	app.use(app.router);
+	app.use(express.static(path.join(application_root, "public"), { maxAge: 0 }));
 });
 
 app.configure('development', function() {
-	app.use(express.static(path.join(application_root, "public")));
 	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 app.configure('production', function() {
-	var oneYear = 31557600000;
-	app.use(express.static(path.join(application_root, "public"), { maxAge: oneYear }));
 	app.use(express.errorHandler());
 });
 
@@ -69,8 +68,9 @@ app.post('/api/chapters', function(req, res, next) {
 	});
 });
 
+app.post('/api/marked', function(req, res, next) {
+	res.send(marked.parse(req.body.data));
+});
+
 // Launch the server.
-
-console.log("TEEST");
-
 app.listen(4242); 

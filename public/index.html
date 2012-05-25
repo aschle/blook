@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>blook.js</title>
+<script type="text/javascript" src="include/jquery/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="include/markitup/jquery.markitup.js"></script>
+<script type="text/javascript" src="include/markitup/sets/markdown/set.js"></script>
+<link rel="stylesheet" type="text/css" href="include/markitup/skins/markitup/style.css"></link>
+<link rel="stylesheet" type="text/css" href="include/markitup/sets/markdown/style.css"></link>
+
+<script type="text/javascript" >
+	$(document).ready(function() {
+
+
+		var customSettings = mySettings;
+		customSettings["previewParserPath"] = '/api/marked/';
+		$("#markItUp").markItUp(customSettings);
+	});
+</script>
+
+</head>
+</body>
+Hello World!
+
+...
+<textarea id="markItUp"></textarea>
+</body>
+</html>
