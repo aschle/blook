@@ -42,8 +42,7 @@ var ChapterModel = mongoose.model('Chapter', Chapter);
 
 app.get('/api/chapters', function(req, res, next) {
 	console.log("Ok");
-	return EntryModel.find(function (err, entries) {
-		console.log("Hier nie")
+	return ChapterModel.find(function (err, entries) {
 		if(!err)
 			return res.send(entries);
 		else

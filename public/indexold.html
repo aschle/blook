@@ -8,20 +8,39 @@
 <link rel="stylesheet" type="text/css" href="include/markitup/sets/markdown/style.css"></link>
 
 <script type="text/javascript" >
+
+	var lastChapter = 0;
+	function loadChapters() {
+		var upto = lastChapter + 5;
+		$.get("/api/capters/" + lastChapter + ".." + upto, function(data, status, jqxhr) {
+			console.log(data);
+		});
+	}
+
+	function appendChapter(chapter) {
+
+		$("#content").append();
+	}
+
+
+
 	$(document).ready(function() {
 
+		loadChapters();
 
 		var customSettings = mySettings;
 		customSettings["previewParserPath"] = '/api/marked/';
 		$("#markItUp").markItUp(customSettings);
+
 	});
 </script>
 
 </head>
 </body>
-Hello World!
+<h1>Blook</h1>
+<div id="content" style="background-color: red;">
 
-...
+</div>
 <textarea id="markItUp"></textarea>
 </body>
 </html>
