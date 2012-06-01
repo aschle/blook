@@ -23,6 +23,8 @@
 	<link rel="stylesheet" href="stylesheets/layout.css">
 	<link rel="stylesheet" type="text/css" href="javascripts/plugins/markitup/skins/markitup/style.css"></link>
 	<link rel="stylesheet" type="text/css" href="javascripts/plugins/markitup/sets/markdown/style.css"></link>
+	<link rel="stylesheet" type="text/css" href="javascripts/plugins/noty/css/jquery.noty.css"/>
+	<link rel="stylesheet" type="text/css" href="javascripts/plugins/noty/css/noty_theme_default.css"/>
 
 	<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -48,11 +50,18 @@
 			<h1 class="remove-bottom" style="margin-top: 40px">blook</h1>
 			<hr />
 		</div>
-		<div class="one-third column" id="content">
+		<div class="twelve columns" id="content">
 		</div>
-		<div class="two-third column" id="menu">
+		<div class="four columns" id="menu">
+			<input type="submit" onClick='javascript:newChapter();' value="new chapter"/>
+		</div>
 
+		<div id="new_chapter_overlay" style="display:none">
+			<input type="text" id="new_chapter_title" />
+			<textarea id="new_chapter_text"></textarea>
+			<input type="submit" id="new_chapter_submit" onClick='javascript:newChapterFinished("{{_id}}");' />
 		</div>
+
 	</div>
 
 
@@ -63,6 +72,8 @@
 	<script src="javascripts/tabs.js"></script>
 	<script src="javascripts/plugins/markitup/jquery.markitup.js"></script>
 	<script src="javascripts/plugins/markitup/sets/markdown/set.js"></script>
+	<script src="javascripts/plugins/noty/js/jquery.noty.js"></script>
+	<script src="javascripts/plugins/jquery.simplemodal.1.4.2.min.js"></script>
 	<script src="javascripts/handlebars-1.0.0.beta.6.js"></script>
 
 	<!-- Handlebars templates
@@ -70,12 +81,18 @@
 
 	<script id="chapter-template" type="text/x-handlebars-template">
 	<div>
-		<h3>{{title}}</h3>
-		<div>
+		<h3 id="title_{{_id}}">{{title}}</h3>
+		<div id="text_{{_id}}">
 			{{text}}
 		</div>
 		<div>
-			Posted on {{date}}. <a href="javascript:editChapter();">Edit.</a>
+			Posted on {{date}}. <a href='javascript:editChapter("{{_id}}");'>Edit.</a>
+		</div>
+		<div id="editbox_{{_id}}" style="display:none;">
+			<input type="text" id="titlebox_{{_id}}" value="{{title}}" />
+			<textarea id="textbox_{{_id}}">{{text}}</textarea>
+			<input type="submit" id="submit_{{_id}}" value="Save" onClick='javascript:editFinished("{{_id}}");' />
+			<input type="submit" id="cancel_{{_id}}" value="Cancel" onClick='javascript:editCancelled("{{_id}}");' />
 		</div>
 	</div>
 	</script>
@@ -83,30 +100,84 @@
 	<!-- Main
 	================================================== -->
 
-	<script type="text/javascript" >
+	<script type="text/javascript">
 	var chapterTemplate = Handlebars.compile($("#chapter-template").html());
+	var chapters = {}
+	var markItUpSettings;
 
-	function editChapter(params) {
-		console.log(params);
+	function render(id) {
+		if(id) {
+			$("#title_" + id).html(chapters[id].title);
+			$("#text_" + id).html(chapters[id].text);
+		} else {
+			$("#content").html("");
+			$.each(chapters, function(idx, chapter) {
+				var html = chapterTemplate(chapter);
+				 $("#content").append(html);
+				 $("#textbox_" + chapter._id).markItUp(markItUpSettings);
+			});
+		}
+	}
+
+	function editChapter(id) {
+		$("#editbox_" + id).slideDown();
+	}
+
+	function editFinished(id) {
+		var titlebox = $("#titlebox_" + id);
+		var textbox = $("#textbox_" + id);
+		var submit = $("#submit_" + id);
+		submit.attr("disabled", "disabled");
+		$.ajax({
+		    type: "PUT",
+		    url: "/api/chapters/" + id,
+		    contentType: 'application/json',
+		    data: JSON.stringify({ title: titlebox.val(), text: textbox.val() }),
+		    success: function(data, status) {
+				chapters[id] = data;
+				render(id);
+				$("#editbox_" + id).slideUp();
+				submit.removeAttr("disabled");
+		    },
+		    error: function() {
+				noty({
+					text: "Could not save chapter.",
+					layout: "top",
+					type: "error",
+					animateOpen: {"height":"toggle"},
+					animateClose: {"height":"toggle"}, 
+					speed: 500,
+					timeout: 3000, 
+					closeButton: false,
+					closeOnSelfClick: true, 
+					closeOnSelfOver: false, modal: 
+					false
+				});
+				submit.removeAttr("disabled");
+			}
+		});
+	}
+
+	function editCancelled(id) {
+		$("#editbox_" + id).slideUp();
+		$("#titlebox_" + id).val(chapters[id].title);
+		$("#textbox_" + id).val(chapters[id].text);
 	}
 
 	function loadContent() {
 		$.get("/api/chapters/", function(data, status, jqxhr) {
+			chapters = {};
 			$.each(data, function(idx, chapter) {
-				var html = chapterTemplate(chapter);
-				 $("#content").append(html);
+				chapters[chapter._id] = chapter;
 			});
+			render();
 		});
 	}
 
 	$(document).ready(function() {
-
 		loadContent();
-
-		var customSettings = mySettings;
-		customSettings["previewParserPath"] = '/api/marked/';
-		$("#markItUp").markItUp(customSettings);
-
+		markItUpSettings = mySettings;
+		markItUpSettings["previewParserPath"] = '/api/marked/';
 	});
 	</script>
 

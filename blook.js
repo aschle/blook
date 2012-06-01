@@ -47,7 +47,7 @@ app.get('/api/chapters', function(req, res, next) {
 			return res.send(entries);
 		else
 			console.log(err);
-			next(err);
+			return next(err);
 	});
 });
 
@@ -61,11 +61,30 @@ app.post('/api/chapters', function(req, res, next) {
 
 	chapter.save(function(err) {
 		if(!err)
-			res.send(chapter);
+			return res.send(chapter);
 		else
-			next(err);
+			console.log(err);
+			return next(err);
 	});
 });
+
+app.put('/api/chapters/:id', function(req, res, next) {
+	return ChapterModel.findById(req.params.id, function (err, chapter) {
+		console.log(req.body);
+		chapter.title = req.body.title;
+		chapter.text = req.body.text;
+		return chapter.save(function (err) {
+			if (!err) {
+				console.log("updated");
+			} else {
+				console.log(err);
+				return next(err);
+			}
+			return res.send(chapter);
+		});
+	});
+});
+
 
 app.post('/api/marked', function(req, res, next) {
 	res.send(marked.parse(req.body.data));
