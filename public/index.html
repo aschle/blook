@@ -83,7 +83,6 @@
 	<div>
 		<h3 id="title_{{_id}}">{{title}}</h3>
 		<div id="text_{{_id}}">
-			{{text}}
 		</div>
 		<div>
 			Posted on {{date}}. <a href='javascript:editChapter("{{_id}}");'>Edit.</a>
@@ -107,13 +106,16 @@
 
 	function render(id) {
 		if(id) {
+			// Update single chapter (after editing).
 			$("#title_" + id).html(chapters[id].title);
-			$("#text_" + id).html(chapters[id].text);
+			$("#text_" + id).html(chapters[id].html);
 		} else {
+			// Render all chapters through template.
 			$("#content").html("");
 			$.each(chapters, function(idx, chapter) {
 				var html = chapterTemplate(chapter);
 				 $("#content").append(html);
+				 $("#text_" + chapter._id).html(chapter.html);
 				 $("#textbox_" + chapter._id).markItUp(markItUpSettings);
 			});
 		}
@@ -134,10 +136,10 @@
 		    contentType: 'application/json',
 		    data: JSON.stringify({ title: titlebox.val(), text: textbox.val() }),
 		    success: function(data, status) {
-				chapters[id] = data;
-				render(id);
-				$("#editbox_" + id).slideUp();
-				submit.removeAttr("disabled");
+					chapters[id] = data;
+					render(id);
+					$("#editbox_" + id).slideUp();
+					submit.removeAttr("disabled");
 		    },
 		    error: function() {
 				noty({

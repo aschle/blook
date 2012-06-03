@@ -41,41 +41,61 @@ var ChapterModel = mongoose.model('Chapter', Chapter);
 // REST API
 
 app.get('/api/chapters', function(req, res, next) {
-	console.log("Ok");
 	return ChapterModel.find(function (err, entries) {
-		if(!err)
-			return res.send(entries);
-		else
+		if(!err) {
+			var es = [];
+			for (idx in entries) {
+				var e = new Object();
+				e['_id'] = entries[idx]['_id'];
+				e['title'] = entries[idx]['title'];
+				e['date'] = entries[idx]['date'];
+				e['text'] = entries[idx]['text'];
+				e['html'] = marked.parse(e['text']);
+				es.push(e);
+			}
+			return res.send(es);
+		} else {
 			console.log(err);
 			return next(err);
+		}
 	});
 });
 
 app.post('/api/chapters', function(req, res, next) {
-	console.log("Create a new chapter!")
-	console.log(req.body);
 	chapter = new ChapterModel({
 		title: req.body.title,
 		text: req.body.text
 	});
 
 	chapter.save(function(err) {
-		if(!err)
-			return res.send(chapter);
-		else
+		if(!err) {
+			var e = new Object();
+			e['_id'] = chapter['_id'];
+			e['title'] = chapter['title'];
+			e['date'] = chapter['date'];
+			e['text'] = chapter['text'];
+			e['html'] = marked.parse(e['text']);
+			return res.send(e);
+		} else {
 			console.log(err);
 			return next(err);
+		}
 	});
 });
 
 app.put('/api/chapters/:id', function(req, res, next) {
 	return ChapterModel.findById(req.params.id, function (err, chapter) {
-		console.log(req.body);
 		chapter.title = req.body.title;
 		chapter.text = req.body.text;
 		return chapter.save(function (err) {
 			if (!err) {
-				console.log("updated");
+				var e = new Object();
+				e['_id'] = chapter['_id'];
+				e['title'] = chapter['title'];
+				e['date'] = chapter['date'];
+				e['text'] = chapter['text'];
+				e['html'] = marked.parse(e['text']);
+				return res.send(e);
 			} else {
 				console.log(err);
 				return next(err);
